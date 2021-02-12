@@ -113,6 +113,7 @@ querybuilder querybuilder::setTableName(string TableName) {
 /**
  *  select
  */
+
 querybuilder querybuilder::select(string column_name){
     this->select_columns = std::move(column_name);
     return *this;
@@ -120,6 +121,7 @@ querybuilder querybuilder::select(string column_name){
 /**
  *  select
  */
+
 querybuilder querybuilder::select(vector<string> column_names) {
     this->select_columns = "";
     for(string column_name : column_names){
@@ -128,6 +130,15 @@ querybuilder querybuilder::select(vector<string> column_names) {
     this->select_columns.pop_back();
     return *this;
 }
+
+/**
+ * add select
+ */
+querybuilder querybuilder::addSelect(string column_name) {
+    this->select_columns = this->select_columns + "," + column_name;
+    return *this;
+}
+
 /**
  * where statement
  */
@@ -150,11 +161,15 @@ querybuilder querybuilder::where(string column_name, string operation, string co
     this->where_statements = this->where_statements + before + std::move(column_name) + " " + operation + " " + std::move(column_value);
     return *this;
 }
-
-
-
+/**
+ * where statement with custom raw
+ */
 querybuilder querybuilder::whereRaw(string whereRaw) {
-    this->where_statements = " WHERE "+whereRaw;
+    string before = " AND ";
+    if(this->where_statements == "" || this->where_statements.empty()){
+        before = " WHERE ";
+    }
+    this->where_statements = before + whereRaw;
     return *this;
 }
 

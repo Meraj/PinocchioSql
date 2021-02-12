@@ -73,6 +73,7 @@ public:
      * @since 0.1
      */
     querybuilder setTableName(string TableName);
+
     /**
      * select a single column
      * @param column_name string - column name
@@ -81,6 +82,7 @@ public:
      * @since 0.1
      */
     querybuilder select(string column_name);
+
     /**
      * select multiple columns
      * @param column_names vector<string> - column names as Array
@@ -89,6 +91,15 @@ public:
      * @since 0.1
      */
     querybuilder select(vector<string> column_names);
+
+    /**
+     * add a new column after run select function
+     * @param column_name string
+     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder addSelect(string column_name);
+
     /**
      * column_name the name of the column that you want to sort by
      * @param column_name string
@@ -99,6 +110,7 @@ public:
      * @since 0.1
      */
     querybuilder orderBy(string column_name, string order_type);
+
     /**
      * limit rows
      * @param limit int
@@ -109,6 +121,7 @@ public:
      * @since 0.1
      */
     querybuilder limit(int limit, int offset = 0);
+
     /**
      * where statement sql
      * @param column_name string
@@ -118,21 +131,23 @@ public:
      * @since 0.1
      */
     querybuilder where(string column_name, string column_value);
+
     /**
      * where statement sql with custom operation
      * @param column_name string
      * @param operation string
      * @param column_value string
+     * @sample where("column_name","LIKE","this is a test")
      * @author Meraj
      * @since 0.1
      */
     querybuilder where(string column_name,string operation, string column_value);
 
     /**
-       * where statement sql
-       * @param column_name string
-       * @param column_value string
-       * @sample where("column_one","this is a test")
+       * where statement sql with custom raw
+       * @param whereRaw string
+       * @sample whereRaw("column_one = 'this is a test'")
+       * @sample whereRaw("column_one LIKE 'this is a test'")
        * @author Meraj
        * @since 0.1
        */
