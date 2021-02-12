@@ -25,6 +25,9 @@ private:
     string limit_query;
     string where_statements;
     string order_by_query;
+
+    vector<string> insertColumns;
+    vector<string> insertValues;
 public:
     querybuilder();
     /**
@@ -64,7 +67,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    string QueryBuilder(int Type = 0);
+    string QueryBuilder(int Type = 0,bool is_prepared = false);
 
     /**
      * set table name
@@ -153,7 +156,6 @@ public:
        */
     querybuilder whereRaw(string whereRaw);
 
-    string insertQuery(vector<string> column_names, vector<string> column_values);
 
     pqxx::result doInsert(const string &sqlQuery);
 

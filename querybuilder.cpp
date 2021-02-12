@@ -73,15 +73,34 @@ querybuilder::querybuilder() {
 /**
  *  Query Builder
  */
-string querybuilder::QueryBuilder(int Type) {
+string querybuilder::QueryBuilder(int Type,bool is_prepared) {
     string sqlQuery;
     switch (Type) {
         case 0:
-            sqlQuery += "SELECT "+this->select_columns+" FROM "+this->table_name;
+            sqlQuery = "SELECT "+this->select_columns+" FROM "+this->table_name;
             break;
         case 1:
-
-            break;
+            sqlQuery = "INSERT INTO " + this->table_name + " (";
+            for(auto column_name :this->insertColumns){
+                sqlQuery += column_name + ",";
+            }
+            sqlQuery.pop_back();
+            sqlQuery = sqlQuery + ") VALUES (";
+            if(is_prepared){
+                for(auto column_value :this->insertValues){
+                    sqlQuery += column_value + ",";
+                }
+                sqlQuery.pop_back();
+                sqlQuery = sqlQuery +")";
+            }else{
+                int preparedIndex = 1;
+                for(int i = 0 ; i < this->insertValues.size();i++){
+                    sqlQuery += "$" + to_string(i) + ",";
+                }
+                sqlQuery.pop_back();
+                sqlQuery = sqlQuery +")";
+            }
+            break;                                                                                                                                                                                  
         case 2:
 
             break;
@@ -91,15 +110,18 @@ string querybuilder::QueryBuilder(int Type) {
         default:
             break;
     }
+
     //
-    if(!this->where_statements.empty()){
-        sqlQuery += " "+ this->where_statements;
-    }
-    if(!this->order_by_query.empty()){
-        sqlQuery += " "+ this->order_by_query;
-    }
-    if(!this->limit_query.empty()){
-        sqlQuery += " "+ this->limit_query;
+    if(Type != 1){
+        if(!this->where_statements.empty()){
+            sqlQuery += " "+ this->where_statements;
+        }
+        if(!this->order_by_query.empty()){
+            sqlQuery += " "+ this->order_by_query;
+        }
+        if(!this->limit_query.empty()){
+            sqlQuery += " "+ this->limit_query;
+        }
     }
     return sqlQuery;
 }
@@ -189,36 +211,21 @@ querybuilder querybuilder::limit(int limit, int offset) {
 }
 
 pqxx::result querybuilder::insert(string column_name, string column_value) {
+    this->insertColumns = {std::move(column_name)};
+    this->insertValues = {std::move(column_value)};
     std::cout << "asdadadadad";
     //  string SqlQuery = this->insertQuery({std::move(column_name)},{std::move(column_value)});
     //  return this->doInsert(SqlQuery);
 }
 
 pqxx::result querybuilder::insert(vector<string> column_names, vector<string> column_values) {
+    this->insertColumns = column_names;
+    this->insertValues = column_values;
     string SqlQuery = this->insertQuery(column_names, column_values);
     cout << SqlQuery << endl;
     return this->doInsert(SqlQuery);
 }
 
-string querybuilder::insertQuery(vector<string> column_names, vector<string> column_values) {
-    string columnNamesString;
-    string columnValuesString;
-    for (int i = 0; i < column_names.size(); i++) {
-        columnNamesString += column_names[i] + ",";
-        if (this->isPrepared) {
-            columnValuesString += "$" + to_string(this->preparedIndex) + ",";
-            this->preparedValues.push_back(column_values[i]);
-            this->preparedIndex++;
-        } else {
-            columnValuesString += "'" + column_values[i] + "',";
-        }
-    }
-    columnNamesString.pop_back();
-    columnValuesString.pop_back();
-    string sqlQuery =
-            "INSERT INTO " + this->table_name + "(" + columnNamesString + ") VALUES (" + columnValuesString + ")";
-    return sqlQuery;
-}
 
 pqxx::result querybuilder::doInsert(const string &sqlQuery) {
     pqxx::work W{*this->db};
