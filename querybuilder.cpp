@@ -6,11 +6,73 @@
 
 using namespace std;
 
+#include <utility>
 #include <vector>
 #include <string>
 #include <pqxx/pqxx>
 #include <iostream>
 
+/**
+ *  querybuilder constructor
+ */
+querybuilder::querybuilder(string connect) {
+    try
+    {
+        this->db = new pqxx::connection(connect);
+        if (!this->db->is_open())
+        {
+            std::cout << "CAN NOT open database" << endl;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        cerr << e.what() << std::endl;
+    }
+
+}
+/**
+ *  querybuilder constructor
+ */
+querybuilder::querybuilder(string dbName, string dbUser, string dbPass, string dbHost, string dbPort) {
+    try
+    {
+        this->db = new pqxx::connection("dbname = " + dbName + " user = " + dbUser + " password = " + dbPass+ " hostaddr = " + dbHost +" port = " + dbPort+ "");
+        if (!this->db->is_open())
+        {
+            std::cout << "CAN NOT open database" << endl;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        cerr << e.what() << std::endl;
+    }
+}
+/**
+ *  querybuilder constructor
+ */
+querybuilder::querybuilder(pqxx::connection connection) {
+    try
+    {
+        this->db = &connection;
+        if (!this->db->is_open())
+        {
+            std::cout << "CAN NOT open database" << endl;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        cerr << e.what() << std::endl;
+    }
+}
+/**
+ *  querybuilder constructor
+ */
+querybuilder::querybuilder() {
+}
+
+/**
+ *  Query Builder
+ */
 string querybuilder::QueryBuilder(int Type) {
     string sqlQuery;
     switch (Type) {
@@ -41,15 +103,23 @@ string querybuilder::QueryBuilder(int Type) {
     }
     return sqlQuery;
 }
-
-void querybuilder::setTableName(string TableName) {
+/**
+ *  set table name
+ */
+querybuilder querybuilder::setTableName(string TableName) {
     this->table_name = std::move(TableName);
-}
-
-querybuilder querybuilder::select(string column_name){
-    this->select_columns = column_name;
     return *this;
 }
+/**
+ *  select
+ */
+querybuilder querybuilder::select(string column_name){
+    this->select_columns = std::move(column_name);
+    return *this;
+}
+/**
+ *  select
+ */
 querybuilder querybuilder::select(vector<string> column_names) {
     this->select_columns = "";
     for(string column_name : column_names){
@@ -58,21 +128,51 @@ querybuilder querybuilder::select(vector<string> column_names) {
     this->select_columns.pop_back();
     return *this;
 }
-
-querybuilder querybuilder::orderBy(string column_name, string order_type) {
-    this->order_by_query = "ORDER BY " + std::move(column_name) + " "+std::move(order_type);
+/**
+ * where statement
+ */
+querybuilder querybuilder::where(string column_name, string column_value) {
+    string before = " AND ";
+    if(this->where_statements == "" || this->where_statements.empty()){
+        before = " WHERE ";
+    }
+    this->where_statements = this->where_statements + before + std::move(column_name) + "=" + std::move(column_value);
+    return *this;
+}
+/**
+ * where statement with operation
+ */
+querybuilder querybuilder::where(string column_name, string operation, string column_value) {
+    string before = " AND ";
+    if(this->where_statements == "" || this->where_statements.empty()){
+        before = " WHERE ";
+    }
+    this->where_statements = this->where_statements + before + std::move(column_name) + " " + operation + " " + std::move(column_value);
     return *this;
 }
 
-querybuilder querybuilder::limit(int limit, int offset) {
-    this->limit_query = " LIMIT "+to_string(limit)+" OFFSET "+to_string(offset);
-    return *this;
-}
+
 
 querybuilder querybuilder::whereRaw(string whereRaw) {
     this->where_statements = " WHERE "+whereRaw;
     return *this;
 }
+
+/**
+ * order by
+ */
+querybuilder querybuilder::orderBy(string column_name, string order_type) {
+    this->order_by_query = "ORDER BY " + std::move(column_name) + " "+std::move(order_type);
+    return *this;
+}
+/**
+ * limit
+ */
+querybuilder querybuilder::limit(int limit, int offset) {
+    this->limit_query = " LIMIT "+to_string(limit)+" OFFSET "+to_string(offset);
+    return *this;
+}
+
 pqxx::result querybuilder::insert(string column_name, string column_value) {
     std::cout << "asdadadadad";
     //  string SqlQuery = this->insertQuery({std::move(column_name)},{std::move(column_value)});
@@ -130,6 +230,5 @@ pqxx::result querybuilder::first() {
     }
 }
 
-void querybuilder::strConnect(string con) {
-    this->db = new pqxx::connection(con);
-}
+
+
