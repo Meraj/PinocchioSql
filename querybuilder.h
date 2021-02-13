@@ -257,6 +257,13 @@ public:
      * @since 0.1
      */
     pqxx::result update(std::vector<std::string> column_names,std::vector<std::string> column_values);
+
+    /**
+     * delete row/rows
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result Delete();
 };
 
 #endif //PQXXQB_QUERYBUILDER_H

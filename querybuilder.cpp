@@ -112,7 +112,7 @@ std::string querybuilder::QueryBuilder(int Type, bool is_prepared) {
             break;
         }
         case 3:
-
+            sqlQuery = "DELETE FROM " + this->table_name + " ";
             break;
         default:
 
@@ -400,6 +400,12 @@ pqxx::result querybuilder::update(std::string column_name, std::string column_va
     this->customColumns = {column_name};
     this->customValues = {column_value};
     return this->execute(this->QueryBuilder(2));
+}
+/**
+ * delete row/rows
+ */
+pqxx::result querybuilder::Delete() {
+    return this->execute(this->QueryBuilder(3));
 }
 
 
