@@ -1,4 +1,5 @@
 # PinocchioSql
+## in progress...
 libpqxx QueryBuilder \
 you can use PinocchioSql library for build queries \
 this library require [libpqxx](https://github.com/jtv/libpqxx) 
