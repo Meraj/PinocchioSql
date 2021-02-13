@@ -18,7 +18,6 @@ protected:
     string table_name;
     pqxx::connection *db;
 private:
-    bool isPrepared = false;
     int preparedIndex = 1;
     std::vector<std::string> preparedValues;
     string select_columns;
@@ -32,6 +31,7 @@ private:
 
     pqxx::result doInsert();
 public:
+    bool isPrepared = true;
     querybuilder();
 
     /**

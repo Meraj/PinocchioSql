@@ -102,7 +102,6 @@ string querybuilder::QueryBuilder(int Type,bool is_prepared) {
             }
             break;                                                                                                                                                                                  
         case 2:
-
             break;
         case 3:
 
@@ -191,7 +190,13 @@ querybuilder querybuilder::where(string column_name, string column_value) {
     if(this->where_statements == "" || this->where_statements.empty()){
         before = " WHERE ";
     }
-    this->where_statements = this->where_statements + before + std::move(column_name) + "=" + std::move(column_value);
+    if(this->isPrepared){
+        this->where_statements = this->where_statements + before + std::move(column_name) + "= $" + to_string(this->preparedIndex);
+        this->preparedValues.push_back(column_value);
+        this->preparedIndex++;
+    }else{
+        this->where_statements = this->where_statements + before + std::move(column_name) + "=" + std::move(column_value);
+    }
     return *this;
 }
 /**
@@ -202,24 +207,41 @@ querybuilder querybuilder::where(string column_name, string operation, string co
     if(this->where_statements == "" || this->where_statements.empty()){
         before = " WHERE ";
     }
-    this->where_statements = this->where_statements + before + std::move(column_name) + " " + operation + " " + std::move(column_value);
+    if(this->isPrepared){
+        this->where_statements = this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " $" + to_string(this->preparedIndex);
+        this->preparedValues.push_back(column_value);
+        this->preparedIndex++;
+    }else{
+        this->where_statements = this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " " + std::move(column_value);
+    }
     return *this;
 }
 /**
  * or Where
  */
 querybuilder querybuilder::orWhere(string column_name, string column_value) {
-    this->where_statements = this->where_statements + " OR " + std::move(column_name) + " = " + std::move(column_value);
+    if(this->isPrepared){
+        this->where_statements = this->where_statements + " OR " + std::move(column_name) + "= $" + to_string(this->preparedIndex);
+        this->preparedValues.push_back(column_value);
+        this->preparedIndex++;
+    }else{
+        this->where_statements = this->where_statements + " OR " + std::move(column_name) + "=" + std::move(column_value);
+    }
     return *this;
 }
 /**
  * or Where with operation
  */
 querybuilder querybuilder::orWhere(string column_name, string operation, string column_value) {
-    this->where_statements = this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " " + std::move(column_value);
+    if(this->isPrepared){
+        this->where_statements = this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " $" + to_string(this->preparedIndex);
+        this->preparedValues.push_back(column_value);
+        this->preparedIndex++;
+    }else{
+        this->where_statements = this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " " + std::move(column_value);
+    }
     return *this;
 }
-
 
 /**
  * where statement with custom raw
@@ -294,9 +316,14 @@ pqxx::result querybuilder::get() {
     string query = this->QueryBuilder();
     pqxx::work W{ *this->db};
     try{
-        pqxx::result R{W.exec(query)};
-        W.commit();
-        return R;
+        if(this->isPrepared){
+            this->db->prepare("example",query);
+            return W.exec_prepared("example",this->preparedValues);
+        }else{
+            pqxx::result R{W.exec(query)};
+            W.commit();
+            return R;
+        }
     }
     catch (const std::exception &e)
     {
@@ -311,9 +338,14 @@ pqxx::result querybuilder::get(int limit) {
     string query = this->QueryBuilder();
     pqxx::work W{ *this->db};
     try{
-        pqxx::result R{W.exec(query)};
-        W.commit();
-        return R;
+        if(this->isPrepared){
+            this->db->prepare("example",query);
+            return W.exec_prepared("example",this->preparedValues);
+        }else{
+            pqxx::result R{W.exec(query)};
+            W.commit();
+            return R;
+        }
     }
     catch (const std::exception &e)
     {
