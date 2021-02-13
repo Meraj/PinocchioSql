@@ -5,31 +5,30 @@
 #ifndef PQXXQB_QUERYBUILDER_H
 #define PQXXQB_QUERYBUILDER_H
 
-#include <iostream>
-
-using namespace std;
-
-#include <vector>
-#include <string>
 #include <pqxx/pqxx>
 
 class querybuilder {
 protected:
-    string table_name;
+    std::string table_name;
     pqxx::connection *db;
 private:
     int preparedIndex = 1;
     std::vector<std::string> preparedValues;
-    string select_columns;
-    string selectRaw_sql;
-    string limit_query;
-    string where_statements;
-    string order_by_query;
-
-    vector<string> insertColumns;
-    vector<string> insertValues;
-
-    pqxx::result doInsert();
+    std::string select_columns;
+    std::string selectRaw_sql;
+    std::string limit_query;
+    std::string where_statements;
+    std::string order_by_query;
+    std::string groupByQuery;
+    std::vector<std::string> customColumns;
+    std::vector<std::string> customValues;
+    /**
+     * execute sql Queries
+     * @param query string
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result execute(std::string query);
 public:
     /**
      * isPrepared - if it`s true prevent SqlInjection
@@ -39,23 +38,22 @@ public:
 
     /**
      * connect to the database for running sqlQueries
-     * @param connect string
-     * @author Meraj
+     * @param connect std::string     * @author Meraj
      * @since 0.1
      */
-    querybuilder(string connect);
+    querybuilder(std::string connect);
 
     /**
     * connect to the database for running sqlQueries
-    * @param dbName string - database Name
-    * @param dbUser string - database User
-    * @param dbPass string - database Password
-    * @param dbHost string - database HostName
-    * @param dbPort string - database Port
+    * @param dbName std::string - database Name
+    * @param dbUser std::string - database User
+    * @param dbPass std::string - database Password
+    * @param dbHost std::string - database HostName
+    * @param dbPort std::string - database Port
     * @author Meraj
     * @since 0.1
     */
-    querybuilder(string dbName, string dbUser, string dbPass, string dbHost, string dbPort);
+    querybuilder(std::string dbName, std::string dbUser, std::string dbPass, std::string dbHost, std::string dbPort);
 
     /**
      * connect to the database for running sqlQueries
@@ -74,7 +72,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    string QueryBuilder(int Type = 0, bool is_prepared = false);
+    std::string QueryBuilder(int Type = 0, bool is_prepared = false);
 
     /**
      * set table name
@@ -82,34 +80,33 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder setTableName(string TableName);
+    querybuilder setTableName(std::string TableName);
 
     /**
      * select a single column
-     * @param column_name string - column name
+     * @param column_name std::string - column name
      * @sample select("column_one")
      * @author Meraj
      * @since 0.1
      */
-    querybuilder select(string column_name);
+    querybuilder select(std::string column_name);
 
     /**
      * select multiple columns
-     * @param column_names vector<string> - column names as Array
+     * @param column_names vector<std::string - column names as Array
      * @sample select({"column_one","column_two"})
      * @author Meraj
      * @since 0.1
      */
-    querybuilder select(vector<string> column_names);
+    querybuilder select(std::vector<std::string> column_names);
 
     /**
      * select raw for custom select
-     * @param sql string
-     * @sample selectRaw("SUM(column_one)")
+     * @param sql std::string     * @sample selectRaw("SUM(column_one)")
      * @author Meraj
      * @since 0.1
      */
-    querybuilder selectRaw(string sql);
+    querybuilder selectRaw(std::string sql);
 
     /**
      * add select raw for custom select
@@ -117,26 +114,63 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder addSelectRaw(string sql);
+    querybuilder addSelectRaw(std::string sql);
 
     /**
      * add a new column after run select function
-     * @param column_name string
+     * @param column_name std::string     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder addSelect(std::string column_name);
+
+    /**
+     * where statement sql
+     * @param column_name std::string     * @param column_value std::string     * @sample where("column_one","this is a test")
      * @author Meraj
      * @since 0.1
      */
-    querybuilder addSelect(string column_name);
+    querybuilder where(std::string column_name, std::string column_value);
+
+    /**
+     * where statement sql with custom operation
+     * @param column_name std::string     * @param operation std::string     * @param column_value std::string     * @sample where("column_name","LIKE","this is a test")
+     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder where(std::string column_name, std::string operation, std::string column_value);
+
+    /**
+     * OR WHERE
+     * @param column_name std::string     * @param column_value std::string     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder orWhere(std::string column_name, std::string column_value);
+
+     /**
+     * OR WHERE with operation
+     * @param column_name std::string     * @param operation std::string     * @param column_value std::string     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder orWhere(std::string column_name, std::string operation, std::string column_value);
+
+    /**
+       * where statement sql with custom raw
+       * @param whereRaw std::string       * @sample whereRaw("column_one = 'this is a test'")
+       * @sample whereRaw("column_one LIKE 'this is a test'")
+       * @author Meraj
+       * @since 0.1
+       */
+    querybuilder whereRaw(std::string whereRaw);
 
     /**
      * column_name the name of the column that you want to sort by
-     * @param column_name string
-     * @param order_type string -> ASC or DESC
+     * @param column_name std::string     * @param order_type std::string -> ASC or DESC
      * @sample orderBy("column_one","ASC");
      * @sample orderBy("column_one","DESC");
      * @author Meraj
      * @since 0.1
      */
-    querybuilder orderBy(string column_name, string order_type);
+    querybuilder orderBy(std::string column_name, std::string order_type);
 
     /**
      * limit rows
@@ -150,61 +184,24 @@ public:
     querybuilder limit(int limit, int offset = 0);
 
     /**
-     * where statement sql
+     * Group By
      * @param column_name string
-     * @param column_value string
-     * @sample where("column_one","this is a test")
      * @author Meraj
      * @since 0.1
      */
-    querybuilder where(string column_name, string column_value);
+    querybuilder groupBy(std::string column_name);
 
     /**
-     * where statement sql with custom operation
-     * @param column_name string
-     * @param operation string
-     * @param column_value string
-     * @sample where("column_name","LIKE","this is a test")
+     * Group By
+     * @param column_name vector<string>
      * @author Meraj
      * @since 0.1
      */
-    querybuilder where(string column_name, string operation, string column_value);
+    querybuilder groupBy(std::vector<std::string> column_names);
 
-    /**
-     * OR WHERE
-     * @param column_name string
-     * @param column_value string
-     * @author Meraj
-     * @since 0.1
-     */
-    querybuilder orWhere(string column_name, string column_value);
+    pqxx::result insert(std::string column_name, std::string column_value);
 
-     /**
-     * OR WHERE with operation
-     * @param column_name string
-     * @param operation string
-     * @param column_value string
-     * @author Meraj
-     * @since 0.1
-     */
-    querybuilder orWhere(string column_name, string operation, string column_value);
-
-    /**
-       * where statement sql with custom raw
-       * @param whereRaw string
-       * @sample whereRaw("column_one = 'this is a test'")
-       * @sample whereRaw("column_one LIKE 'this is a test'")
-       * @author Meraj
-       * @since 0.1
-       */
-    querybuilder whereRaw(string whereRaw);
-
-
-
-
-    pqxx::result insert(string column_name, string column_value);
-
-    pqxx::result insert(vector<string> column_names, vector<string> column_values);
+    pqxx::result insert(std::vector<std::string> column_names, std::vector<std::string> column_values);
     /**
      * get single row
      * @return pqxx::result
@@ -228,6 +225,38 @@ public:
      * @since 0.1
      */
     pqxx::result get(int limit);
+
+    /**
+     * count Rows
+     * @author Meraj
+     * @since 0.1
+     */
+    int count();
+
+    /**
+     * execute custom query
+     * @param sql
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result query(std::string sql);
+    /**
+     * update row/rows
+     * @param column_name string
+     * @param column_value string
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result update(std::string column_name,std::string column_value);
+
+    /**
+     * update row/rows
+     * @param column_names vector<string>
+     * @param column_values vector<string>
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result update(std::vector<std::string> column_names,std::vector<std::string> column_values);
 };
 
 #endif //PQXXQB_QUERYBUILDER_H

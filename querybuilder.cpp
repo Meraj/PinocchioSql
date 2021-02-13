@@ -4,66 +4,58 @@
 
 #include "querybuilder.h"
 
-using namespace std;
-
-#include <utility>
-#include <vector>
-#include <string>
-#include <pqxx/pqxx>
 #include <iostream>
+#include <pqxx/pqxx>
 
 /**
  *  querybuilder constructor
  */
-querybuilder::querybuilder(string connect) {
-    try
-    {
+querybuilder::querybuilder(std::string connect) {
+    try {
         this->db = new pqxx::connection(connect);
-        if (!this->db->is_open())
-        {
-            std::cout << "CAN NOT open database" << endl;
+        if (!this->db->is_open()) {
+            std::cout << "CAN NOT open database" << std::endl;
         }
     }
-    catch (const std::exception &e)
-    {
-        cerr << e.what() << std::endl;
+    catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 
 }
+
 /**
  *  querybuilder constructor
  */
-querybuilder::querybuilder(string dbName, string dbUser, string dbPass, string dbHost, string dbPort) {
-    try
-    {
-        this->db = new pqxx::connection("dbname = " + dbName + " user = " + dbUser + " password = " + dbPass+ " hostaddr = " + dbHost +" port = " + dbPort+ "");
-        if (!this->db->is_open())
-        {
-            std::cout << "CAN NOT open database" << endl;
+querybuilder::querybuilder(std::string dbName, std::string dbUser, std::string dbPass, std::string dbHost,
+                           std::string dbPort) {
+    try {
+        this->db = new pqxx::connection(
+                "dbname = " + dbName + " user = " + dbUser + " password = " + dbPass + " hostaddr = " + dbHost +
+                " port = " + dbPort + "");
+        if (!this->db->is_open()) {
+            std::cout << "CAN NOT open database" << std::endl;
         }
     }
-    catch (const std::exception &e)
-    {
-        cerr << e.what() << std::endl;
+    catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 }
+
 /**
  *  querybuilder constructor
  */
 querybuilder::querybuilder(pqxx::connection connection) {
-    try
-    {
+    try {
         this->db = &connection;
-        if (!this->db->is_open())
-        {
-            std::cout << "CAN NOT open database" << endl;
+        if (!this->db->is_open()) {
+            std::cout << "CAN NOT open database" << std::endl;
         }
     }
-    catch (const std::exception &e)
-    {
-        cerr << e.what() << std::endl;
+    catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 }
+
 /**
  *  querybuilder constructor
  */
@@ -73,79 +65,118 @@ querybuilder::querybuilder() {
 /**
  *  Query Builder
  */
-string querybuilder::QueryBuilder(int Type,bool is_prepared) {
+std::string querybuilder::QueryBuilder(int Type, bool is_prepared) {
     this->isPrepared = is_prepared;
-    string sqlQuery;
+    std::string sqlQuery;
     switch (Type) {
         case 0:
-            sqlQuery = "SELECT "+this->select_columns+" FROM "+this->table_name;
+            sqlQuery = "SELECT " + this->select_columns + " FROM " + this->table_name;
             break;
         case 1:
             sqlQuery = "INSERT INTO " + this->table_name + " (";
-            for(auto column_name :this->insertColumns){
+            for (auto column_name :this->customColumns) {
                 sqlQuery += column_name + ",";
             }
             sqlQuery.pop_back();
             sqlQuery = sqlQuery + ") VALUES (";
-            if(is_prepared){
-                for(int i = 1 ; i <= this->preparedValues.size();i++){
-                    sqlQuery += "$" + to_string(i) + ",";
+            if (is_prepared) {
+                for (int i = 1; i <= this->preparedValues.size(); i++) {
+                    sqlQuery += "$" + std::to_string(i) + ",";
                 }
                 sqlQuery.pop_back();
-                sqlQuery = sqlQuery +")";
-            }else{
-                for(string column_value :this->preparedValues){
+                sqlQuery = sqlQuery + ")";
+            } else {
+                for (std::string column_value :this->preparedValues) {
                     sqlQuery += column_value + ",";
                 }
                 sqlQuery.pop_back();
-                sqlQuery = sqlQuery +")";
+                sqlQuery = sqlQuery + ")";
             }
-            break;                                                                                                                                                                                  
-        case 2:
             break;
+        case 2: {
+            sqlQuery = "UPDATE " + this->table_name + " SET ";
+            std::string setColumns;
+            if (this->isPrepared) {
+                for (int i = 0; i < this->customColumns.size(); i++) {
+                    setColumns += this->customColumns[i] + " = $" + std::to_string(this->preparedIndex) + ",";
+                    this->preparedIndex++;
+                }
+                setColumns.pop_back();
+            } else {
+                for (int i = 0; i < this->customColumns.size(); i++) {
+                    setColumns += this->customColumns[i] + " = " + this->customValues[i] + ",";
+                }
+                setColumns.pop_back();
+            }
+
+            break;
+        }
         case 3:
 
             break;
         default:
+
             break;
     }
-
     //
-    if(Type != 1){
-        if(!this->where_statements.empty()){
-            sqlQuery += " "+ this->where_statements;
+    if (Type != 1) {
+        if (!this->where_statements.empty()) {
+            std::string prepare = "$?";
+            while (this->where_statements.find(prepare) != std::string::npos) {
+                this->where_statements.replace(this->where_statements.find(prepare), prepare.length(),
+                                               "$" + this->preparedIndex);
+                this->preparedIndex++;
+            }
+            if (this->customValues.size() != 0) {
+                std::vector<std::string> bcPreparedValues = this->preparedValues;
+                this->preparedValues = this->customValues;
+                for (std::string value :bcPreparedValues) {
+                    this->preparedValues.push_back(value);
+                }
+            }
+            sqlQuery += " " + this->where_statements;
+            this->where_statements = "";
         }
-        if(!this->order_by_query.empty()){
-            sqlQuery += " "+ this->order_by_query;
+        if (!this->order_by_query.empty()) {
+            sqlQuery += " " + this->order_by_query;
+            this->order_by_query = "";
         }
-        if(!this->limit_query.empty()){
-            sqlQuery += " "+ this->limit_query;
+        if (!this->groupByQuery.empty()) {
+            sqlQuery += " " + this->groupByQuery;
+            this->groupByQuery = "";
+        }
+        if (!this->limit_query.empty()) {
+            sqlQuery += " " + this->limit_query;
+            this->limit_query = "";
         }
     }
     return sqlQuery;
 }
+
 /**
  *  set table name
  */
-querybuilder querybuilder::setTableName(string TableName) {
+querybuilder querybuilder::setTableName(std::string TableName) {
     this->table_name = std::move(TableName);
     return *this;
 }
+
 /**
  *  select
  */
 
-querybuilder querybuilder::select(string column_name){
+querybuilder querybuilder::select(std::string column_name) {
     this->select_columns = std::move(column_name);
     return *this;
 }
+
 /**
  *  select
  */
 
-querybuilder querybuilder::select(vector<string> column_names) {
+querybuilder querybuilder::select(std::vector<std::string> column_names) {
     this->select_columns = "";
-    for(string column_name : column_names){
+    for (std::string column_name : column_names) {
         this->select_columns += column_name + ",";
     }
     this->select_columns.pop_back();
@@ -155,18 +186,19 @@ querybuilder querybuilder::select(vector<string> column_names) {
 /**
  * add select
  */
-querybuilder querybuilder::addSelect(string column_name) {
+querybuilder querybuilder::addSelect(std::string column_name) {
     this->select_columns = this->select_columns + "," + column_name;
     return *this;
 }
+
 /**
  * select Raw
  */
-querybuilder querybuilder::selectRaw(string sql) {
-    if(this->selectRaw_sql.empty()){
+querybuilder querybuilder::selectRaw(std::string sql) {
+    if (this->selectRaw_sql.empty()) {
         this->selectRaw_sql = std::move(sql);
-    }else{
-        this->selectRaw_sql += ","+sql;
+    } else {
+        this->selectRaw_sql += "," + sql;
     }
     return *this;
 }
@@ -174,71 +206,79 @@ querybuilder querybuilder::selectRaw(string sql) {
 /**
  * add select raw
  */
-querybuilder querybuilder::addSelectRaw(string sql) {
-    if(this->selectRaw_sql.empty()){
+querybuilder querybuilder::addSelectRaw(std::string sql) {
+    if (this->selectRaw_sql.empty()) {
         this->selectRaw_sql = std::move(sql);
-    }else{
-        this->selectRaw_sql += ","+sql;
+    } else {
+        this->selectRaw_sql += "," + sql;
     }
     return *this;
 }
+
 /**
  * where statement
  */
-querybuilder querybuilder::where(string column_name, string column_value) {
-    string before = " AND ";
-    if(this->where_statements == "" || this->where_statements.empty()){
+querybuilder querybuilder::where(std::string column_name, std::string column_value) {
+    std::string before = " AND ";
+    if (this->where_statements == "" || this->where_statements.empty()) {
         before = " WHERE ";
     }
-    if(this->isPrepared){
-        this->where_statements = this->where_statements + before + std::move(column_name) + "= $" + to_string(this->preparedIndex);
+    if (this->isPrepared) {
+        this->where_statements = this->where_statements + before + std::move(column_name) + "= $? ";
         this->preparedValues.push_back(column_value);
-        this->preparedIndex++;
-    }else{
-        this->where_statements = this->where_statements + before + std::move(column_name) + "=" + std::move(column_value);
+    } else {
+        this->where_statements =
+                this->where_statements + before + std::move(column_name) + "=" + std::move(column_value);
     }
     return *this;
 }
+
 /**
  * where statement with operation
  */
-querybuilder querybuilder::where(string column_name, string operation, string column_value) {
-    string before = " AND ";
-    if(this->where_statements == "" || this->where_statements.empty()){
+querybuilder querybuilder::where(std::string column_name, std::string operation, std::string column_value) {
+    std::string before = " AND ";
+    if (this->where_statements == "" || this->where_statements.empty()) {
         before = " WHERE ";
     }
-    if(this->isPrepared){
-        this->where_statements = this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " $" + to_string(this->preparedIndex);
+    if (this->isPrepared) {
+        this->where_statements =
+                this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " $? ";
         this->preparedValues.push_back(column_value);
-        this->preparedIndex++;
-    }else{
-        this->where_statements = this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " " + std::move(column_value);
+    } else {
+        this->where_statements =
+                this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " " +
+                std::move(column_value);
     }
     return *this;
 }
+
 /**
  * or Where
  */
-querybuilder querybuilder::orWhere(string column_name, string column_value) {
-    if(this->isPrepared){
-        this->where_statements = this->where_statements + " OR " + std::move(column_name) + "= $" + to_string(this->preparedIndex);
+querybuilder querybuilder::orWhere(std::string column_name, std::string column_value) {
+    if (this->isPrepared) {
+        this->where_statements = this->where_statements + " OR " + std::move(column_name) + "= $? ";
         this->preparedValues.push_back(column_value);
-        this->preparedIndex++;
-    }else{
-        this->where_statements = this->where_statements + " OR " + std::move(column_name) + "=" + std::move(column_value);
+    } else {
+        this->where_statements =
+                this->where_statements + " OR " + std::move(column_name) + "=" + std::move(column_value);
     }
     return *this;
 }
+
 /**
  * or Where with operation
  */
-querybuilder querybuilder::orWhere(string column_name, string operation, string column_value) {
-    if(this->isPrepared){
-        this->where_statements = this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " $" + to_string(this->preparedIndex);
+querybuilder querybuilder::orWhere(std::string column_name, std::string operation, std::string column_value) {
+    if (this->isPrepared) {
+        this->where_statements =
+                this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " $? ";
         this->preparedValues.push_back(column_value);
-        this->preparedIndex++;
-    }else{
-        this->where_statements = this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " " + std::move(column_value);
+    } else {
+        this->where_statements =
+                this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " " +
+                std::move(column_value);
     }
     return *this;
 }
@@ -246,9 +286,9 @@ querybuilder querybuilder::orWhere(string column_name, string operation, string 
 /**
  * where statement with custom raw
  */
-querybuilder querybuilder::whereRaw(string whereRaw) {
-    string before = " AND ";
-    if(this->where_statements == "" || this->where_statements.empty()){
+querybuilder querybuilder::whereRaw(std::string whereRaw) {
+    std::string before = " AND ";
+    if (this->where_statements == "" || this->where_statements.empty()) {
         before = " WHERE ";
     }
     this->where_statements = before + whereRaw;
@@ -258,100 +298,110 @@ querybuilder querybuilder::whereRaw(string whereRaw) {
 /**
  * order by
  */
-querybuilder querybuilder::orderBy(string column_name, string order_type) {
-    this->order_by_query = "ORDER BY " + std::move(column_name) + " "+std::move(order_type);
+querybuilder querybuilder::orderBy(std::string column_name, std::string order_type) {
+    this->order_by_query = "ORDER BY " + std::move(column_name) + " " + std::move(order_type);
     return *this;
 }
+
 /**
  * limit
  */
 querybuilder querybuilder::limit(int limit, int offset) {
-    this->limit_query = " LIMIT "+to_string(limit)+" OFFSET "+to_string(offset);
+    this->limit_query = " LIMIT " + std::to_string(limit) + " OFFSET " + std::to_string(offset);
     return *this;
 }
 
-pqxx::result querybuilder::insert(string column_name, string column_value) {
-    this->insertColumns = {std::move(column_name)};
-    this->preparedValues.push_back(column_value);
-    return this->doInsert();
+/**
+ * group by
+ */
+querybuilder querybuilder::groupBy(std::string column_name) {
+    this->groupByQuery = " GROUP BY " + column_name;
+    return *this;
 }
 
-pqxx::result querybuilder::insert(vector<string> column_names, vector<string> column_values) {
-    this->insertColumns = column_names;
-    for (string value :column_values){
+/**
+ * group by
+ */
+querybuilder querybuilder::groupBy(std::vector<std::string> column_names) {
+    std::string columns;
+    for (std::string column :column_names) {
+        columns += column + ",";
+    }
+    columns.pop_back();
+    this->groupByQuery = " GROUP BY " + columns;
+    return *this;
+}
+
+
+pqxx::result querybuilder::insert(std::string column_name, std::string column_value) {
+    this->customColumns = {std::move(column_name)};
+    this->preparedValues.push_back(column_value);
+    return this->execute(this->QueryBuilder(1));
+}
+
+pqxx::result querybuilder::insert(std::vector<std::string> column_names, std::vector<std::string> column_values) {
+    this->customColumns = column_names;
+    for (std::string value :column_values) {
         this->preparedValues.push_back(value);
     }
-    return this->doInsert();
+    return this->execute(this->QueryBuilder(1));
 }
 
 
-pqxx::result querybuilder::doInsert() {
-    string sqlQuery = this->QueryBuilder(1);
-    pqxx::work W{*this->db};
-    try {
-        if(this->isPrepared){
-            this->db->prepare("example",sqlQuery);
-            return W.exec_prepared("example",this->preparedValues);
-        }else{
-            pqxx::result R{W.exec(sqlQuery)};
-            W.commit();
-            return R;
-        }
-    }
-    catch (const std::exception &e)
-    {
-        cerr << e.what() << std::endl;
-    }
-}
 /**
  * first
  */
 pqxx::result querybuilder::first() {
     return this->get(1);
 }
+
 /**
  * get
  */
 pqxx::result querybuilder::get() {
-    string query = this->QueryBuilder();
-    pqxx::work W{ *this->db};
-    try{
-        if(this->isPrepared){
-            this->db->prepare("example",query);
-            return W.exec_prepared("example",this->preparedValues);
-        }else{
-            pqxx::result R{W.exec(query)};
-            W.commit();
-            return R;
-        }
-    }
-    catch (const std::exception &e)
-    {
-        cerr << e.what() << std::endl;
-    }
+    return this->execute(this->QueryBuilder());
 }
+
 /**
  * get with limitation
  */
 pqxx::result querybuilder::get(int limit) {
     this->limit(limit);
-    string query = this->QueryBuilder();
-    pqxx::work W{ *this->db};
-    try{
-        if(this->isPrepared){
-            this->db->prepare("example",query);
-            return W.exec_prepared("example",this->preparedValues);
-        }else{
+    return this->execute(this->QueryBuilder());
+}
+
+pqxx::result querybuilder::query(std::string sql) {
+    return this->execute(sql);
+}
+
+int querybuilder::count() {
+    this->selectRaw("COUNT(*)");
+    pqxx::result result = this->execute(this->QueryBuilder());
+}
+
+pqxx::result querybuilder::execute(std::string query) {
+    pqxx::work W{*this->db};
+    try {
+        if (this->isPrepared) {
+            this->db->prepare("example", query);
+            return W.exec_prepared("example", this->preparedValues);
+        } else {
             pqxx::result R{W.exec(query)};
             W.commit();
             return R;
         }
     }
-    catch (const std::exception &e)
-    {
-        cerr << e.what() << std::endl;
+    catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
     }
 }
+
+pqxx::result querybuilder::update(std::string column_name, std::string column_value) {
+    this->customColumns = {column_name};
+    this->customValues = {column_value};
+    return this->execute(this->QueryBuilder(2));
+}
+
 
 
 
