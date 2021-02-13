@@ -22,14 +22,18 @@ private:
     int preparedIndex = 1;
     std::vector<std::string> preparedValues;
     string select_columns;
+    string selectRaw_sql;
     string limit_query;
     string where_statements;
     string order_by_query;
 
     vector<string> insertColumns;
     vector<string> insertValues;
+
+    pqxx::result doInsert();
 public:
     querybuilder();
+
     /**
      * connect to the database for running sqlQueries
      * @param connect string
@@ -67,7 +71,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    string QueryBuilder(int Type = 0,bool is_prepared = false);
+    string QueryBuilder(int Type = 0, bool is_prepared = false);
 
     /**
      * set table name
@@ -94,6 +98,23 @@ public:
      * @since 0.1
      */
     querybuilder select(vector<string> column_names);
+
+    /**
+     * select raw for custom select
+     * @param sql string
+     * @sample selectRaw("SUM(column_one)")
+     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder selectRaw(string sql);
+
+    /**
+     * add select raw for custom select
+     * @param sql
+     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder addSelectRaw(string sql);
 
     /**
      * add a new column after run select function
@@ -144,7 +165,26 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder where(string column_name,string operation, string column_value);
+    querybuilder where(string column_name, string operation, string column_value);
+
+    /**
+     * OR WHERE
+     * @param column_name string
+     * @param column_value string
+     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder orWhere(string column_name, string column_value);
+
+     /**
+     * OR WHERE with operation
+     * @param column_name string
+     * @param operation string
+     * @param column_value string
+     * @author Meraj
+     * @since 0.1
+     */
+    querybuilder orWhere(string column_name, string operation, string column_value);
 
     /**
        * where statement sql with custom raw
@@ -157,15 +197,34 @@ public:
     querybuilder whereRaw(string whereRaw);
 
 
-    pqxx::result doInsert(const string &sqlQuery);
+
 
     pqxx::result insert(string column_name, string column_value);
 
     pqxx::result insert(vector<string> column_names, vector<string> column_values);
-
+    /**
+     * get single row
+     * @return pqxx::result
+     * @author Meraj
+     * @since 0.1
+     */
     pqxx::result first();
-
-    void Connect(string con);
+    /**
+     * get row/rows
+     * @return pqxx::result
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result get();
+    /**
+     * get row/rows with limit
+     * @param limit int
+     * @sample get(2) -> get 2 rows
+     * @return pqxx::result
+     * @author Meraj
+     * @since 0.1
+     */
+    pqxx::result get(int limit);
 };
 
 #endif //PQXXQB_QUERYBUILDER_H
