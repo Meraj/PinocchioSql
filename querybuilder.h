@@ -31,6 +31,9 @@ private:
 
     pqxx::result doInsert();
 public:
+    /**
+     * isPrepared - if it`s true prevent SqlInjection
+     */
     bool isPrepared = true;
     querybuilder();
 
