@@ -7,7 +7,7 @@
 
 #include <pqxx/pqxx>
 
-class querybuilder {
+class pinocchioQB {
 protected:
     std::string table_name;
     pqxx::connection *db;
@@ -34,14 +34,14 @@ public:
      * isPrepared - if it`s true prevent SqlInjection
      */
     bool isPrepared = true;
-    querybuilder();
+    pinocchioQB();
 
     /**
      * connect to the database for running sqlQueries
      * @param connect std::string     * @author Meraj
      * @since 0.1
      */
-    querybuilder(std::string connect);
+    pinocchioQB(std::string connect);
 
     /**
     * connect to the database for running sqlQueries
@@ -53,7 +53,7 @@ public:
     * @author Meraj
     * @since 0.1
     */
-    querybuilder(std::string dbName, std::string dbUser, std::string dbPass, std::string dbHost, std::string dbPort);
+    pinocchioQB(std::string dbName, std::string dbUser, std::string dbPass, std::string dbHost, std::string dbPort);
 
     /**
      * connect to the database for running sqlQueries
@@ -61,7 +61,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder(pqxx::connection connection);
+    pinocchioQB(pqxx::connection connection);
 
     /**
      * Query Buidler Main Function - build sql queries
@@ -80,7 +80,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder setTableName(std::string TableName);
+    pinocchioQB setTableName(std::string TableName);
 
     /**
      * select a single column
@@ -89,7 +89,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder select(std::string column_name);
+    pinocchioQB select(std::string column_name);
 
     /**
      * select multiple columns
@@ -98,7 +98,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder select(std::vector<std::string> column_names);
+    pinocchioQB select(std::vector<std::string> column_names);
 
     /**
      * select raw for custom select
@@ -106,7 +106,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder selectRaw(std::string sql);
+    pinocchioQB selectRaw(std::string sql);
 
     /**
      * add select raw for custom select
@@ -114,14 +114,14 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder addSelectRaw(std::string sql);
+    pinocchioQB addSelectRaw(std::string sql);
 
     /**
      * add a new column after run select function
      * @param column_name std::string     * @author Meraj
      * @since 0.1
      */
-    querybuilder addSelect(std::string column_name);
+    pinocchioQB addSelect(std::string column_name);
 
     /**
      * where statement sql
@@ -129,7 +129,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder where(std::string column_name, std::string column_value);
+    pinocchioQB where(std::string column_name, std::string column_value);
 
     /**
      * where statement sql with custom operation
@@ -137,21 +137,21 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder where(std::string column_name, std::string operation, std::string column_value);
+    pinocchioQB where(std::string column_name, std::string operation, std::string column_value);
 
     /**
      * OR WHERE
      * @param column_name std::string     * @param column_value std::string     * @author Meraj
      * @since 0.1
      */
-    querybuilder orWhere(std::string column_name, std::string column_value);
+    pinocchioQB orWhere(std::string column_name, std::string column_value);
 
      /**
      * OR WHERE with operation
      * @param column_name std::string     * @param operation std::string     * @param column_value std::string     * @author Meraj
      * @since 0.1
      */
-    querybuilder orWhere(std::string column_name, std::string operation, std::string column_value);
+    pinocchioQB orWhere(std::string column_name, std::string operation, std::string column_value);
 
     /**
        * where statement sql with custom raw
@@ -160,7 +160,7 @@ public:
        * @author Meraj
        * @since 0.1
        */
-    querybuilder whereRaw(std::string whereRaw);
+    pinocchioQB whereRaw(std::string whereRaw);
 
     /**
      * column_name the name of the column that you want to sort by
@@ -170,7 +170,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder orderBy(std::string column_name, std::string order_type);
+    pinocchioQB orderBy(std::string column_name, std::string order_type);
 
     /**
      * limit rows
@@ -181,7 +181,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder limit(int limit, int offset = 0);
+    pinocchioQB limit(int limit, int offset = 0);
 
     /**
      * Group By
@@ -189,7 +189,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder groupBy(std::string column_name);
+    pinocchioQB groupBy(std::string column_name);
 
     /**
      * Group By
@@ -197,7 +197,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    querybuilder groupBy(std::vector<std::string> column_names);
+    pinocchioQB groupBy(std::vector<std::string> column_names);
 
     pqxx::result insert(std::string column_name, std::string column_value);
 
@@ -256,6 +256,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
+
     pqxx::result update(std::vector<std::string> column_names,std::vector<std::string> column_values);
 
     /**
