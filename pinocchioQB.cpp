@@ -70,6 +70,7 @@ std::string pinocchioQB::QueryBuilder(int Type) {
     switch (Type) {
         case 0:
             sqlQuery = "SELECT " + this->select_columns + " FROM " + this->table_name;
+            this->select_columns = " * ";
             break;
         case 1:
             sqlQuery = "INSERT INTO " + this->table_name + " (";
