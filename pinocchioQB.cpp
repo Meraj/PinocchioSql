@@ -59,8 +59,7 @@ pinocchioQB::pinocchioQB(pqxx::connection connection) {
 /**
  *  pinocchioQB constructor
  */
-pinocchioQB::pinocchioQB() {
-}
+pinocchioQB::pinocchioQB() {}
 
 /**
  *  Query Builder
@@ -93,6 +92,7 @@ std::string pinocchioQB::QueryBuilder(int Type) {
                 setColumns += this->customColumns[i] + " = '" + this->db->esc(this->customValues[i]) + "',";
             }
             setColumns.pop_back();
+            sqlQuery += setColumns + " ";
             break;
         }
         case 3:
@@ -106,21 +106,19 @@ std::string pinocchioQB::QueryBuilder(int Type) {
     if (Type != 1) {
         if (!this->where_statements.empty()) {
             sqlQuery += " " + this->where_statements;
-            this->where_statements = "";
         }
         if (!this->order_by_query.empty()) {
             sqlQuery += " " + this->order_by_query;
-            this->order_by_query = "";
         }
         if (!this->groupByQuery.empty()) {
             sqlQuery += " " + this->groupByQuery;
-            this->groupByQuery = "";
         }
         if (!this->limit_query.empty()) {
             sqlQuery += " " + this->limit_query;
-            this->limit_query = "";
         }
     }
+    std::cout << sqlQuery << std::endl;
+    this->resetVariables();
     return sqlQuery;
 }
 
@@ -166,7 +164,7 @@ pinocchioQB pinocchioQB::addSelect(std::string column_name) {
  * select Raw
  */
 pinocchioQB pinocchioQB::selectRaw(std::string sql) {
-    this->selectRaw_sql = std::move(sql);
+    this->select_columns = std::move(sql);
     return *this;
 }
 
@@ -180,7 +178,7 @@ pinocchioQB pinocchioQB::selectRaw(std::string sql, std::vector<std::string> bin
         sql.replace(sql.find(prepare), prepare.length(), this->db->esc(bindParams[i]));
         i++;
     }
-    this->selectRaw_sql = std::move(sql);
+    this->select_columns = std::move(sql);
     return *this;
 }
 
@@ -189,10 +187,10 @@ pinocchioQB pinocchioQB::selectRaw(std::string sql, std::vector<std::string> bin
  * add select raw
  */
 pinocchioQB pinocchioQB::addSelectRaw(std::string sql) {
-    if (this->selectRaw_sql.empty()) {
-        this->selectRaw_sql = std::move(sql);
+    if (this->select_columns.empty()) {
+        this->select_columns = std::move(sql);
     } else {
-        this->selectRaw_sql += "," + sql;
+        this->select_columns += "," + sql;
     }
     return *this;
 }
@@ -207,10 +205,10 @@ pinocchioQB pinocchioQB::addSelectRaw(std::string sql, std::vector<std::string> 
         sql.replace(sql.find(prepare), prepare.length(), this->db->esc(bindParams[i]));
         i++;
     }
-    if (this->selectRaw_sql.empty()) {
-        this->selectRaw_sql = std::move(sql);
+    if (this->select_columns.empty()) {
+        this->select_columns = std::move(sql);
     } else {
-        this->selectRaw_sql += "," + sql;
+        this->select_columns += "," + sql;
     }
     return *this;
 }
@@ -221,13 +219,10 @@ pinocchioQB pinocchioQB::addSelectRaw(std::string sql, std::vector<std::string> 
  */
 pinocchioQB pinocchioQB::where(std::string column_name, std::string column_value) {
     std::string before = " AND ";
-    if (this->where_statements == "" || this->where_statements.empty()) {
+    if (this->where_statements.empty()) {
         before = " WHERE ";
     }
-    this->where_statements =
-            this->where_statements + before + std::move(column_name) + "='" + this->db->esc(std::move(column_value)) +
-            "' ";
-
+    this->where_statements += before + std::move(column_name) + "='" + this->db->esc(std::move(column_value)) +"' ";
     return *this;
 }
 
@@ -236,7 +231,7 @@ pinocchioQB pinocchioQB::where(std::string column_name, std::string column_value
  */
 pinocchioQB pinocchioQB::where(std::string column_name, std::string operation, std::string column_value) {
     std::string before = " AND ";
-    if (this->where_statements == "" || this->where_statements.empty()) {
+    if (this->where_statements.empty()) {
         before = " WHERE ";
     }
     this->where_statements =
@@ -343,7 +338,8 @@ pqxx::row pinocchioQB::first() {
  * get
  */
 pqxx::result pinocchioQB::get() {
-    return this->execute(this->QueryBuilder());
+    std::string query = this->QueryBuilder();
+    return this->execute(query);
 }
 
 /**
@@ -361,10 +357,19 @@ pqxx::result pinocchioQB::query(std::string sql) {
 int pinocchioQB::count() {
     this->selectRaw("COUNT(*)");
     pqxx::result result = this->execute(this->QueryBuilder());
+    try{
+        return std::stoi(result[0][0].c_str());
+    }
+    catch (const std::exception &e) {
+        std::cout << e.what() << std::endl;
+    }
+    return 0;
 }
 
 pqxx::result pinocchioQB::execute(std::string query) {
+
     pqxx::work w(*this->db);
+    this->resetVariables();
     try {
         pqxx::result result = w.exec(query);
         w.commit();
@@ -390,7 +395,7 @@ pqxx::result pinocchioQB::update(std::string column_name, std::string column_val
 pqxx::result pinocchioQB::update(std::vector<std::string> column_names, std::vector<std::string> column_values) {
     this->customColumns = std::move(column_names);
     this->customValues = std::move(column_values);
-    return pqxx::result();
+    return this->execute(this->QueryBuilder(2));
 }
 
 /**
@@ -400,8 +405,14 @@ pqxx::result pinocchioQB::Delete() {
     return this->execute(this->QueryBuilder(3));
 }
 
-
-
-
-
-
+void pinocchioQB::resetVariables() {
+    this->queryValues.clear();
+    this->select_columns = " * ";
+    this->limit_query.clear();
+    this->where_statements.clear();
+    this->where_statements = "";
+    this->order_by_query.clear();
+    this->groupByQuery.clear();
+    this->customColumns.clear();
+    this->customValues.clear();
+}

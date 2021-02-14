@@ -13,13 +13,13 @@ protected:
 private:
     std::vector<std::string> queryValues;
     std::string select_columns = "*";
-    std::string selectRaw_sql;
     std::string limit_query;
     std::string where_statements;
     std::string order_by_query;
     std::string groupByQuery;
     std::vector<std::string> customColumns;
     std::vector<std::string> customValues;
+    void resetVariables();
     /**
      * execute sql Queries
      * @param query string
