@@ -65,8 +65,7 @@ pinocchioQB::pinocchioQB() {
 /**
  *  Query Builder
  */
-std::string pinocchioQB::QueryBuilder(int Type, bool is_prepared) {
-    this->isPrepared = is_prepared;
+std::string pinocchioQB::QueryBuilder(int Type) {
     std::string sqlQuery;
     switch (Type) {
         case 0:
@@ -79,36 +78,20 @@ std::string pinocchioQB::QueryBuilder(int Type, bool is_prepared) {
             }
             sqlQuery.pop_back();
             sqlQuery = sqlQuery + ") VALUES (";
-            if (is_prepared) {
-                for (int i = 1; i <= this->preparedValues.size(); i++) {
-                    sqlQuery += "$" + std::to_string(i) + ",";
-                }
-                sqlQuery.pop_back();
-                sqlQuery = sqlQuery + ")";
-            } else {
-                for (std::string column_value :this->preparedValues) {
-                    sqlQuery += column_value + ",";
-                }
-                sqlQuery.pop_back();
-                sqlQuery = sqlQuery + ")";
+            for (std::string column_value :this->queryValues) {
+                sqlQuery += "'" + this->db->esc(column_value) + "',";
             }
+            sqlQuery.pop_back();
+            sqlQuery = sqlQuery + ")";
+
             break;
         case 2: {
             sqlQuery = "UPDATE " + this->table_name + " SET ";
             std::string setColumns;
-            if (this->isPrepared) {
-                for (int i = 0; i < this->customColumns.size(); i++) {
-                    setColumns += this->customColumns[i] + " = $" + std::to_string(this->preparedIndex) + ",";
-                    this->preparedIndex++;
-                }
-                setColumns.pop_back();
-            } else {
-                for (int i = 0; i < this->customColumns.size(); i++) {
-                    setColumns += this->customColumns[i] + " = " + this->customValues[i] + ",";
-                }
-                setColumns.pop_back();
+            for (int i = 0; i < this->customColumns.size(); i++) {
+                setColumns += this->customColumns[i] + " = '" + this->db->esc(this->customValues[i]) + "',";
             }
-
+            setColumns.pop_back();
             break;
         }
         case 3:
@@ -121,19 +104,6 @@ std::string pinocchioQB::QueryBuilder(int Type, bool is_prepared) {
     //
     if (Type != 1) {
         if (!this->where_statements.empty()) {
-            std::string prepare = "$?";
-            while (this->where_statements.find(prepare) != std::string::npos) {
-                this->where_statements.replace(this->where_statements.find(prepare), prepare.length(),
-                                               "$" + this->preparedIndex);
-                this->preparedIndex++;
-            }
-            if (this->customValues.size() != 0) {
-                std::vector<std::string> bcPreparedValues = this->preparedValues;
-                this->preparedValues = this->customValues;
-                for (std::string value :bcPreparedValues) {
-                    this->preparedValues.push_back(value);
-                }
-            }
             sqlQuery += " " + this->where_statements;
             this->where_statements = "";
         }
@@ -195,13 +165,24 @@ pinocchioQB pinocchioQB::addSelect(std::string column_name) {
  * select Raw
  */
 pinocchioQB pinocchioQB::selectRaw(std::string sql) {
-    if (this->selectRaw_sql.empty()) {
-        this->selectRaw_sql = std::move(sql);
-    } else {
-        this->selectRaw_sql += "," + sql;
-    }
+    this->selectRaw_sql = std::move(sql);
     return *this;
 }
+
+/**
+ * select Raw with bind params
+ */
+pinocchioQB pinocchioQB::selectRaw(std::string sql, std::vector<std::string> bindParams) {
+    std::string prepare = "$?";
+    int i = 0;
+    while (sql.find(prepare) != std::string::npos) {
+        sql.replace(sql.find(prepare), prepare.length(), this->db->esc(bindParams[i]));
+        i++;
+    }
+    this->selectRaw_sql = std::move(sql);
+    return *this;
+}
+
 
 /**
  * add select raw
@@ -216,6 +197,25 @@ pinocchioQB pinocchioQB::addSelectRaw(std::string sql) {
 }
 
 /**
+ * add select raw with bind params
+ */
+pinocchioQB pinocchioQB::addSelectRaw(std::string sql, std::vector<std::string> bindParams) {
+    std::string prepare = "$?";
+    int i = 0;
+    while (sql.find(prepare) != std::string::npos) {
+        sql.replace(sql.find(prepare), prepare.length(), this->db->esc(bindParams[i]));
+        i++;
+    }
+    if (this->selectRaw_sql.empty()) {
+        this->selectRaw_sql = std::move(sql);
+    } else {
+        this->selectRaw_sql += "," + sql;
+    }
+    return *this;
+}
+
+
+/**
  * where statement
  */
 pinocchioQB pinocchioQB::where(std::string column_name, std::string column_value) {
@@ -223,13 +223,10 @@ pinocchioQB pinocchioQB::where(std::string column_name, std::string column_value
     if (this->where_statements == "" || this->where_statements.empty()) {
         before = " WHERE ";
     }
-    if (this->isPrepared) {
-        this->where_statements = this->where_statements + before + std::move(column_name) + "= $? ";
-        this->preparedValues.push_back(column_value);
-    } else {
-        this->where_statements =
-                this->where_statements + before + std::move(column_name) + "=" + std::move(column_value);
-    }
+    this->where_statements =
+            this->where_statements + before + std::move(column_name) + "='" + this->db->esc(std::move(column_value)) +
+            "' ";
+
     return *this;
 }
 
@@ -241,15 +238,10 @@ pinocchioQB pinocchioQB::where(std::string column_name, std::string operation, s
     if (this->where_statements == "" || this->where_statements.empty()) {
         before = " WHERE ";
     }
-    if (this->isPrepared) {
-        this->where_statements =
-                this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " $? ";
-        this->preparedValues.push_back(column_value);
-    } else {
-        this->where_statements =
-                this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " " +
-                std::move(column_value);
-    }
+    this->where_statements =
+            this->where_statements + before + std::move(column_name) + " " + std::move(operation) + " '" +
+            this->db->esc(std::move(column_value)) + "'";
+
     return *this;
 }
 
@@ -257,13 +249,9 @@ pinocchioQB pinocchioQB::where(std::string column_name, std::string operation, s
  * or Where
  */
 pinocchioQB pinocchioQB::orWhere(std::string column_name, std::string column_value) {
-    if (this->isPrepared) {
-        this->where_statements = this->where_statements + " OR " + std::move(column_name) + "= $? ";
-        this->preparedValues.push_back(column_value);
-    } else {
-        this->where_statements =
-                this->where_statements + " OR " + std::move(column_name) + "=" + std::move(column_value);
-    }
+    this->where_statements =
+            this->where_statements + " OR " + std::move(column_name) + "='" + this->db->esc(std::move(column_value)) +
+            "'";
     return *this;
 }
 
@@ -271,15 +259,10 @@ pinocchioQB pinocchioQB::orWhere(std::string column_name, std::string column_val
  * or Where with operation
  */
 pinocchioQB pinocchioQB::orWhere(std::string column_name, std::string operation, std::string column_value) {
-    if (this->isPrepared) {
-        this->where_statements =
-                this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " $? ";
-        this->preparedValues.push_back(column_value);
-    } else {
-        this->where_statements =
-                this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " " +
-                std::move(column_value);
-    }
+    this->where_statements =
+            this->where_statements + " OR " + std::move(column_name) + " " + std::move(operation) + " '" +
+            this->db->esc(std::move(column_value)) + "'";
+
     return *this;
 }
 
@@ -335,14 +318,14 @@ pinocchioQB pinocchioQB::groupBy(std::vector<std::string> column_names) {
 
 pqxx::result pinocchioQB::insert(std::string column_name, std::string column_value) {
     this->customColumns = {std::move(column_name)};
-    this->preparedValues.push_back(column_value);
+    this->queryValues.push_back(column_value);
     return this->execute(this->QueryBuilder(1));
 }
 
 pqxx::result pinocchioQB::insert(std::vector<std::string> column_names, std::vector<std::string> column_values) {
     this->customColumns = column_names;
     for (std::string value :column_values) {
-        this->preparedValues.push_back(value);
+        this->queryValues.push_back(value);
     }
     return this->execute(this->QueryBuilder(1));
 }
@@ -351,8 +334,8 @@ pqxx::result pinocchioQB::insert(std::vector<std::string> column_names, std::vec
 /**
  * first
  */
-pqxx::result pinocchioQB::first() {
-    return this->get(1);
+pqxx::row pinocchioQB::first() {
+    return this->get(1)[0];
 }
 
 /**
@@ -380,16 +363,11 @@ int pinocchioQB::count() {
 }
 
 pqxx::result pinocchioQB::execute(std::string query) {
-    pqxx::work W{*this->db};
+    pqxx::work w(*this->db);
     try {
-        if (this->isPrepared) {
-            this->db->prepare("example", query);
-            return W.exec_prepared("example", this->preparedValues);
-        } else {
-            pqxx::result R{W.exec(query)};
-            W.commit();
-            return R;
-        }
+        pqxx::result result = w.exec(query);
+        w.commit();
+        return result;
     }
     catch (const std::exception &e) {
         std::cout << e.what() << std::endl;
@@ -400,16 +378,17 @@ pqxx::result pinocchioQB::execute(std::string query) {
  * update
  */
 pqxx::result pinocchioQB::update(std::string column_name, std::string column_value) {
-    this->customColumns = {column_name};
-    this->customValues = {column_value};
+    this->customColumns = {std::move(column_name)};
+    this->customValues = {std::move(column_value)};
     return this->execute(this->QueryBuilder(2));
 }
+
 /**
  * update
  */
 pqxx::result pinocchioQB::update(std::vector<std::string> column_names, std::vector<std::string> column_values) {
-    this->customColumns = column_names;
-    this->customValues = column_values;
+    this->customColumns = std::move(column_names);
+    this->customValues = std::move(column_values);
     return pqxx::result();
 }
 

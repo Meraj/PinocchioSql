@@ -2,19 +2,17 @@
 // Created by meraj on 2/12/21.
 //
 
-#ifndef PQXXQB_QUERYBUILDER_H
-#define PQXXQB_QUERYBUILDER_H
+#ifndef PINOCCHIOSQL_QUERYBUILDER_H
+#define PINOCCHIOSQL_QUERYBUILDER_H
 
 #include <pqxx/pqxx>
 
 class pinocchioQB {
 protected:
     std::string table_name;
-    pqxx::connection *db;
 private:
-    int preparedIndex = 1;
-    std::vector<std::string> preparedValues;
-    std::string select_columns;
+    std::vector<std::string> queryValues;
+    std::string select_columns = "*";
     std::string selectRaw_sql;
     std::string limit_query;
     std::string where_statements;
@@ -30,10 +28,7 @@ private:
      */
     pqxx::result execute(std::string query);
 public:
-    /**
-     * isPrepared - if it`s true prevent SqlInjection
-     */
-    bool isPrepared = true;
+    pqxx::connection *db;
     pinocchioQB();
 
     /**
@@ -72,7 +67,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    std::string QueryBuilder(int Type = 0, bool is_prepared = false);
+    std::string QueryBuilder(int Type = 0);
 
     /**
      * set table name
@@ -109,12 +104,29 @@ public:
     pinocchioQB selectRaw(std::string sql);
 
     /**
+     * select raw for custom select with bind params
+     * @param sql string
+     * @param bindParams vector<string>
+     * @author Meraj
+     * @since 0.2
+     */
+    pinocchioQB selectRaw(std::string sql,std::vector<std::string> bindParams);
+
+    /**
      * add select raw for custom select
      * @param sql
      * @author Meraj
      * @since 0.1
      */
     pinocchioQB addSelectRaw(std::string sql);
+
+    /**
+     * add select raw for custom select with bind params
+     * @param sql
+     * @param bindParams
+     * @return
+     */
+    pinocchioQB addSelectRaw(std::string sql,std::vector<std::string> bindParams);
 
     /**
      * add a new column after run select function
@@ -204,11 +216,11 @@ public:
     pqxx::result insert(std::vector<std::string> column_names, std::vector<std::string> column_values);
     /**
      * get single row
-     * @return pqxx::result
+     * @return pqxx::row
      * @author Meraj
      * @since 0.1
      */
-    pqxx::result first();
+    pqxx::row first();
     /**
      * get row/rows
      * @return pqxx::result
@@ -265,6 +277,8 @@ public:
      * @since 0.1
      */
     pqxx::result Delete();
+
+
 };
 
-#endif //PQXXQB_QUERYBUILDER_H
+#endif //PINOCCHIOSQL_QUERYBUILDER_H
