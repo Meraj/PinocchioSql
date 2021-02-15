@@ -140,6 +140,22 @@ public:
     pinocchioQB addSelect(std::string column_name);
 
     /**
+     * select only different values
+     * @param column_name string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB selectDistinct(std::string column_name);
+
+    /**
+     * select only different values
+     * @param column_name vector<string>
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB selectDistinct(std::vector<std::string> column_names);
+
+    /**
      * where statement sql
      * @param column_name std::string     * @param column_value std::string     * @sample where("column_one","this is a test")
      * @author Meraj

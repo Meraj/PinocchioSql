@@ -213,6 +213,26 @@ pinocchioQB pinocchioQB::addSelectRaw(std::string sql, std::vector<std::string> 
     return *this;
 }
 
+/**
+ *  select Distinct
+ */
+pinocchioQB pinocchioQB::selectDistinct(std::string column_name) {
+   this->select_columns = " DISTINCT " + std::move(column_name);
+    return *this;
+}
+
+/**
+ *  select Distinct
+ */
+pinocchioQB pinocchioQB::selectDistinct(std::vector<std::string> column_names) {
+    this->select_columns = " DISTINCT ";
+    for(std::string column :column_names){
+        this->select_columns += column + ",";
+    }
+    this->select_columns.pop_back();
+    this->select_columns += " ";
+    return *this;
+}
 
 /**
  * where statement
