@@ -267,10 +267,129 @@ pinocchioQB pinocchioQB::orWhere(std::string column_name, std::string operation,
  */
 pinocchioQB pinocchioQB::whereRaw(std::string whereRaw) {
     std::string before = " AND ";
-    if (this->where_statements == "" || this->where_statements.empty()) {
+    if (this->where_statements.empty()) {
         before = " WHERE ";
     }
     this->where_statements = before + whereRaw;
+    return *this;
+}
+
+/**
+ * where null
+ */
+pinocchioQB pinocchioQB::whereNull(std::string column_name) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " IS NULL ";
+    return *this;
+}
+
+/**
+ * or where null
+ */
+pinocchioQB pinocchioQB::orWhereNull(std::string column_name) {
+    this->where_statements = " OR " + std::move(column_name) + " IS NULL ";
+    return *this;
+}
+
+/**
+ * where NOT null
+ */
+pinocchioQB pinocchioQB::whereNotNull(std::string column_name) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " IS NOT NULL ";
+    return *this;
+}
+
+/**
+ * or where NOT null
+ */
+pinocchioQB pinocchioQB::orWhereNotNull(std::string column_name) {
+    this->where_statements = " OR " + std::move(column_name) + " IS NOT NULL ";
+    return *this;
+}
+/**
+ * where between
+ */
+pinocchioQB pinocchioQB::whereBetween(std::string column_name, std::string from, std::string to) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " BETWEEN '" + this->db->esc(std::move(from)) + "' AND '" + this->db->esc(std::move(to)) + "' ";
+    return *this;
+}
+
+/**
+ * where between
+ */
+pinocchioQB pinocchioQB::whereBetween(std::string column_name, int from, int to) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " BETWEEN " + this->db->esc(std::move(std::to_string(from))) + " AND " + this->db->esc(std::move(std::to_string(to))) + " ";
+    return *this;
+}
+
+/**
+ * where between
+ */
+pinocchioQB pinocchioQB::orWhereBetween(std::string column_name, std::string from, std::string to) {
+    this->where_statements = " OR " + std::move(column_name) + " BETWEEN '" + this->db->esc(std::move(from)) + "' AND '" + this->db->esc(std::move(to)) + "' ";
+    return *this;
+}
+
+/**
+ * where between
+ */
+pinocchioQB pinocchioQB::orWhereBetween(std::string column_name, int from, int to) {
+    this->where_statements = " OR " + std::move(column_name) + " BETWEEN " + this->db->esc(std::move(std::to_string(from))) + " AND " + this->db->esc(std::move(std::to_string(to))) + " ";
+    return *this;
+}
+
+/**
+ * where NOT between
+ */
+pinocchioQB pinocchioQB::whereNotBetween(std::string column_name, std::string from, std::string to) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " NOT BETWEEN '" + this->db->esc(std::move(from)) + "' AND '" + this->db->esc(std::move(to)) + "' ";
+    return *this;
+}
+
+/**
+ * where NOT between
+ */
+pinocchioQB pinocchioQB::whereNotBetween(std::string column_name, int from, int to) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " NOT BETWEEN " + this->db->esc(std::move(std::to_string(from))) + " AND " + this->db->esc(std::move(std::to_string(to))) + " ";
+    return *this;
+}
+
+/**
+ * where NOT between
+ */
+pinocchioQB pinocchioQB::orWhereNotBetween(std::string column_name, std::string from, std::string to) {
+    this->where_statements = " OR " + std::move(column_name) + " NOT BETWEEN '" + this->db->esc(std::move(from)) + "' AND '" + this->db->esc(std::move(to)) + "' ";
+    return *this;
+}
+
+/**
+ * where NOT between
+ */
+pinocchioQB pinocchioQB::orWhereNotBetween(std::string column_name, int from, int to) {
+    this->where_statements = " OR " + std::move(column_name) + " NOT BETWEEN " + this->db->esc(std::move(std::to_string(from))) + " AND " + this->db->esc(std::move(std::to_string(to))) + " ";
     return *this;
 }
 

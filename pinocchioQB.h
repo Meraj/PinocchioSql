@@ -19,7 +19,9 @@ private:
     std::string groupByQuery;
     std::vector<std::string> customColumns;
     std::vector<std::string> customValues;
+
     void resetVariables();
+
     /**
      * execute sql Queries
      * @param query string
@@ -27,8 +29,10 @@ private:
      * @since 0.1
      */
     pqxx::result execute(std::string query);
+
 public:
     pqxx::connection *db;
+
     pinocchioQB();
 
     /**
@@ -110,7 +114,7 @@ public:
      * @author Meraj
      * @since 0.2
      */
-    pinocchioQB selectRaw(std::string sql,std::vector<std::string> bindParams);
+    pinocchioQB selectRaw(std::string sql, std::vector<std::string> bindParams);
 
     /**
      * add select raw for custom select
@@ -126,7 +130,7 @@ public:
      * @param bindParams
      * @return
      */
-    pinocchioQB addSelectRaw(std::string sql,std::vector<std::string> bindParams);
+    pinocchioQB addSelectRaw(std::string sql, std::vector<std::string> bindParams);
 
     /**
      * add a new column after run select function
@@ -158,11 +162,11 @@ public:
      */
     pinocchioQB orWhere(std::string column_name, std::string column_value);
 
-     /**
-     * OR WHERE with operation
-     * @param column_name std::string     * @param operation std::string     * @param column_value std::string     * @author Meraj
-     * @since 0.1
-     */
+    /**
+    * OR WHERE with operation
+    * @param column_name std::string     * @param operation std::string     * @param column_value std::string     * @author Meraj
+    * @since 0.1
+    */
     pinocchioQB orWhere(std::string column_name, std::string operation, std::string column_value);
 
     /**
@@ -173,6 +177,118 @@ public:
        * @since 0.1
        */
     pinocchioQB whereRaw(std::string whereRaw);
+
+    /**
+     * where a column is null
+     * @param column_name string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereNull(std::string column_name);
+
+    /**
+     * where a column is null
+     * @param column_name string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereNull(std::string column_name);
+
+    /**
+     * where a column is NOT null
+     * @param column_name string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereNotNull(std::string column_name);
+
+    /**
+     * where a column is NOT null
+     * @param column_name string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereNotNull(std::string column_name);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from string
+     * @param to string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereBetween(std::string column_name, std::string from, std::string to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from int
+     * @param to int
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereBetween(std::string column_name, int from, int to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from string
+     * @param to string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereBetween(std::string column_name, std::string from, std::string to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from int
+     * @param to int
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereBetween(std::string column_name, int from, int to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from string
+     * @param to string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereNotBetween(std::string column_name, std::string from, std::string to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from int
+     * @param to int
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereNotBetween(std::string column_name, int from, int to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from string
+     * @param to string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereNotBetween(std::string column_name, std::string from, std::string to);
+
+    /**
+     * where between
+     * @param column_name string
+     * @param from int
+     * @param to int
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereNotBetween(std::string column_name, int from, int to);
 
     /**
      * column_name the name of the column that you want to sort by
@@ -214,6 +330,7 @@ public:
     pqxx::result insert(std::string column_name, std::string column_value);
 
     pqxx::result insert(std::vector<std::string> column_names, std::vector<std::string> column_values);
+
     /**
      * get single row
      * @return pqxx::row
@@ -221,6 +338,7 @@ public:
      * @since 0.1
      */
     pqxx::row first();
+
     /**
      * get row/rows
      * @return pqxx::result
@@ -228,6 +346,7 @@ public:
      * @since 0.1
      */
     pqxx::result get();
+
     /**
      * get row/rows with limit
      * @param limit int
@@ -252,6 +371,7 @@ public:
      * @since 0.1
      */
     pqxx::result query(std::string sql);
+
     /**
      * update row/rows
      * @param column_name string
@@ -259,7 +379,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
-    pqxx::result update(std::string column_name,std::string column_value);
+    pqxx::result update(std::string column_name, std::string column_value);
 
     /**
      * update row/rows
@@ -269,7 +389,7 @@ public:
      * @since 0.1
      */
 
-    pqxx::result update(std::vector<std::string> column_names,std::vector<std::string> column_values);
+    pqxx::result update(std::vector<std::string> column_names, std::vector<std::string> column_values);
 
     /**
      * delete row/rows
