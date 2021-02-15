@@ -68,8 +68,7 @@ std::string pinocchioQB::QueryBuilder(int Type) {
     std::string sqlQuery;
     switch (Type) {
         case 0:
-            sqlQuery = "SELECT " + this->select_columns + " FROM " + this->table_name;
-            this->select_columns = " * ";
+            sqlQuery = "SELECT " + this->select_columns + " FROM " + this->table_name + " " + this->join;
             break;
         case 1:
             sqlQuery = "INSERT INTO " + this->table_name + " (";
@@ -572,13 +571,49 @@ pinocchioQB pinocchioQB::groupBy(std::vector<std::string> column_names) {
     return *this;
 }
 
+/**
+ * inner join
+ */
+pinocchioQB pinocchioQB::innerJoin(std::string table, std::string table_column_left, std::string table_column_right) {
+    this->join = " INNER JOIN " + std::move(table) + " ON " + std::move(table_column_left) + "=" + std::move(table_column_right);
+    return *this;
+}
 
+/**
+ * left join
+ */
+pinocchioQB pinocchioQB::leftJoin(std::string table, std::string table_column_left, std::string table_column_right) {
+    this->join = " LEFT JOIN " + std::move(table) + " ON " + std::move(table_column_left) + "=" + std::move(table_column_right);
+    return *this;
+}
+
+/**
+ * right join
+ */
+pinocchioQB pinocchioQB::rightJoin(std::string table, std::string table_column_left, std::string table_column_right) {
+    this->join = " RIGHT JOIN " + std::move(table) + " ON " + std::move(table_column_left) + "=" + std::move(table_column_right);
+    return *this;
+}
+
+/**
+ * full join
+ */
+pinocchioQB pinocchioQB::fullJoin(std::string table, std::string table_column_left, std::string table_column_right) {
+    this->join = " FULL JOIN " + std::move(table) + " ON " + std::move(table_column_left) + "=" + std::move(table_column_right);
+    return *this;
+}
+/**
+ * insert into
+ */
 pqxx::result pinocchioQB::insert(std::string column_name, std::string column_value) {
     this->customColumns = {std::move(column_name)};
     this->queryValues.push_back(column_value);
     return this->execute(this->QueryBuilder(1));
 }
 
+/**
+ * insert into
+ */
 pqxx::result pinocchioQB::insert(std::vector<std::string> column_names, std::vector<std::string> column_values) {
     this->customColumns = column_names;
     for (std::string value :column_values) {
@@ -671,10 +706,10 @@ void pinocchioQB::resetVariables() {
     this->select_columns = " * ";
     this->limit_query.clear();
     this->where_statements.clear();
-    this->where_statements = "";
     this->order_by_query.clear();
     this->groupByQuery.clear();
     this->customColumns.clear();
     this->customValues.clear();
 }
+
 

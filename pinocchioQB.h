@@ -19,7 +19,7 @@ private:
     std::string groupByQuery;
     std::vector<std::string> customColumns;
     std::vector<std::string> customValues;
-
+    std::string join;
     void resetVariables();
 
     /**
@@ -416,8 +416,62 @@ public:
      */
     pinocchioQB groupBy(std::vector<std::string> column_names);
 
+    /**
+     * inner join
+     * @param table string
+     * @param table_column_left string
+     * @param table_column_right string
+     * @author Meraj
+     * @since 0.2.3
+     */
+    pinocchioQB innerJoin(std::string table,std::string table_column_left,std::string table_column_right);
+
+    /**
+     * left join
+     * @param table string
+     * @param table_column_left string
+     * @param table_column_right string
+     * @author Meraj
+     * @since 0.2.3
+     */
+    pinocchioQB leftJoin(std::string table,std::string table_column_left,std::string table_column_right);
+
+    /**
+     * right join
+     * @param table string
+     * @param table_column_left string
+     * @param table_column_right string
+     * @author Meraj
+     * @since 0.2.3
+     */
+    pinocchioQB rightJoin(std::string table,std::string table_column_left,std::string table_column_right);
+
+    /**
+     * full join
+     * @param table string
+     * @param table_column_left string
+     * @param table_column_right string
+     * @author Meraj
+     * @since 0.2.3
+     */
+    pinocchioQB fullJoin(std::string table,std::string table_column_left,std::string table_column_right);
+
+    /**
+     * insert into table
+     * @param column_name string
+     * @param column_value string
+     * @author Meraj
+     * @since 0.2.3
+     */
     pqxx::result insert(std::string column_name, std::string column_value);
 
+    /**
+     * insert into table
+     * @param column_name vector<string>
+     * @param column_value vector<string>
+     * @author Meraj
+     * @since 0.2.3
+     */
     pqxx::result insert(std::vector<std::string> column_names, std::vector<std::string> column_values);
 
     /**
