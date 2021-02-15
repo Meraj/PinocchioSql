@@ -313,7 +313,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB whereIn(std::string column_name,std::vector<std::string> values);
+    pinocchioQB whereIn(std::string column_name, std::vector<std::string> values);
 
     /**
      * where in
@@ -322,7 +322,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB whereIn(std::string column_name,std::string sql);
+    pinocchioQB whereIn(std::string column_name, std::string sql);
 
     /**
      * where not in
@@ -331,7 +331,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB whereNotIn(std::string column_name,std::vector<std::string> values);
+    pinocchioQB whereNotIn(std::string column_name, std::vector<std::string> values);
 
     /**
      * where not in
@@ -340,7 +340,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB whereNotIn(std::string column_name,std::string sql);
+    pinocchioQB whereNotIn(std::string column_name, std::string sql);
 
     /**
      * or where in
@@ -349,7 +349,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB orWhereIn(std::string column_name,std::vector<std::string> values);
+    pinocchioQB orWhereIn(std::string column_name, std::vector<std::string> values);
 
     /**
      * or where in
@@ -358,7 +358,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB orWhereIn(std::string column_name,std::string sql);
+    pinocchioQB orWhereIn(std::string column_name, std::string sql);
 
     /**
      * or where not in
@@ -367,7 +367,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB orWhereNotIn(std::string column_name,std::vector<std::string> values);
+    pinocchioQB orWhereNotIn(std::string column_name, std::vector<std::string> values);
 
     /**
      * or where not in
@@ -376,7 +376,7 @@ public:
      * @author Meraj
      * @since 0.2.2
      */
-    pinocchioQB orWhereNotIn(std::string column_name,std::string sql);
+    pinocchioQB orWhereNotIn(std::string column_name, std::string sql);
 
     /**
      * column_name the name of the column that you want to sort by
