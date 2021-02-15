@@ -307,6 +307,78 @@ public:
     pinocchioQB orWhereNotBetween(std::string column_name, int from, int to);
 
     /**
+     * where in
+     * @param column_name string
+     * @param values vector<string>
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereIn(std::string column_name,std::vector<std::string> values);
+
+    /**
+     * where in
+     * @param column_name string
+     * @param sql string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereIn(std::string column_name,std::string sql);
+
+    /**
+     * where not in
+     * @param column_name string
+     * @param values vector<string>
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereNotIn(std::string column_name,std::vector<std::string> values);
+
+    /**
+     * where not in
+     * @param column_name string
+     * @param sql string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB whereNotIn(std::string column_name,std::string sql);
+
+    /**
+     * or where in
+     * @param column_name string
+     * @param values vector<string>
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereIn(std::string column_name,std::vector<std::string> values);
+
+    /**
+     * or where in
+     * @param column_name string
+     * @param sql string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereIn(std::string column_name,std::string sql);
+
+    /**
+     * or where not in
+     * @param column_name string
+     * @param values vector<string>
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereNotIn(std::string column_name,std::vector<std::string> values);
+
+    /**
+     * or where not in
+     * @param column_name string
+     * @param sql string
+     * @author Meraj
+     * @since 0.2.2
+     */
+    pinocchioQB orWhereNotIn(std::string column_name,std::string sql);
+
+    /**
      * column_name the name of the column that you want to sort by
      * @param column_name std::string     * @param order_type std::string -> ASC or DESC
      * @sample orderBy("column_one","ASC");
@@ -314,6 +386,7 @@ public:
      * @author Meraj
      * @since 0.1
      */
+
     pinocchioQB orderBy(std::string column_name, std::string order_type);
 
     /**

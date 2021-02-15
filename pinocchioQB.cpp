@@ -412,6 +412,110 @@ pinocchioQB pinocchioQB::orWhereNotBetween(std::string column_name, int from, in
     this->where_statements = " OR " + std::move(column_name) + " NOT BETWEEN " + this->db->esc(std::move(std::to_string(from))) + " AND " + this->db->esc(std::move(std::to_string(to))) + " ";
     return *this;
 }
+/**
+ * where in
+ */
+pinocchioQB pinocchioQB::whereIn(std::string column_name, std::vector<std::string> values) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " IN (";
+    std::string valuesString;
+    for(std::string value :values){
+        valuesString += "'" + this->db->esc(value) + "',";
+    }
+    valuesString.pop_back();
+    this->where_statements += ")";
+    return *this;
+}
+
+/**
+ * where in
+ */
+pinocchioQB pinocchioQB::whereIn(std::string column_name, std::string sql) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " IN (" + this->db->esc(std::move(sql)) + ") ";
+    return *this;
+}
+
+/**
+ * where NOT in
+ */
+pinocchioQB pinocchioQB::whereNotIn(std::string column_name, std::vector<std::string> values) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " NOT IN (";
+    std::string valuesString;
+    for(std::string value :values){
+        valuesString += "'" + this->db->esc(value) + "',";
+    }
+    valuesString.pop_back();
+    this->where_statements += ")";
+    return *this;
+}
+
+/**
+ * where NOT in
+ */
+pinocchioQB pinocchioQB::whereNotIn(std::string column_name, std::string sql) {
+    std::string before = " AND ";
+    if (this->where_statements.empty()) {
+        before = " WHERE ";
+    }
+    this->where_statements = before + std::move(column_name) + " NOT IN (" + this->db->esc(std::move(sql)) + ") ";
+    return *this;
+}
+
+
+/**
+ * or where in
+ */
+pinocchioQB pinocchioQB::orWhereIn(std::string column_name, std::vector<std::string> values) {
+    this->where_statements = " OR " + std::move(column_name) + " IN (";
+    std::string valuesString;
+    for(std::string value :values){
+        valuesString += "'" + this->db->esc(value) + "',";
+    }
+    valuesString.pop_back();
+    this->where_statements += ")";
+    return *this;
+}
+
+/**
+ * or where in
+ */
+pinocchioQB pinocchioQB::orWhereIn(std::string column_name, std::string sql) {
+    this->where_statements = " OR " + std::move(column_name) + " IN (" + this->db->esc(std::move(sql)) + ") ";
+    return *this;
+}
+
+/**
+ * or where NOT in
+ */
+pinocchioQB pinocchioQB::orWhereNotIn(std::string column_name, std::vector<std::string> values) {
+    this->where_statements = " OR " + std::move(column_name) + " NOT IN (";
+    std::string valuesString;
+    for(std::string value :values){
+        valuesString += "'" + this->db->esc(value) + "',";
+    }
+    valuesString.pop_back();
+    this->where_statements += ")";
+    return *this;
+}
+
+/**
+ * or where NOT in
+ */
+pinocchioQB pinocchioQB::orWhereNotIn(std::string column_name, std::string sql) {
+    this->where_statements = " OR " + std::move(column_name) + " NOT IN (" + this->db->esc(std::move(sql)) + ") ";
+    return *this;
+}
 
 /**
  * order by
@@ -555,3 +659,4 @@ void pinocchioQB::resetVariables() {
     this->customColumns.clear();
     this->customValues.clear();
 }
+
